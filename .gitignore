@@ -1,0 +1,24 @@
+# dependencies
+node_modules/
+
+# build / framework (later milestones)
+.next/
+out/
+
+# secrets
+.env
+.env.*
+!.env.example
+
+# deferred milestone context (Stripe / Telegram / deploy setup) - kept local only
+project-context/
+.agents/
+.railway-config-pull-*/
+
+# local dev database (PGlite) and rendered editions
+.winnow/
+editions/
+
+# misc
+*.log
+.DS_Store

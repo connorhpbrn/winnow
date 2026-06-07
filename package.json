@@ -1,0 +1,40 @@
+{
+  "name": "winnow",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Winnow - a personal intelligence agent in Telegram. Milestone 1: the AI core (CLI harness).",
+  "scripts": {
+    "start": "tsx telegram/runner.ts",
+    "bot:dev": "tsx telegram/runner.ts",
+    "check": "npm run typecheck && npm run lint && npm test",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test test/*.test.ts"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.5.1",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "dotenv": "^17.4.2",
+    "drizzle-orm": "^0.45.2",
+    "nanoid": "^5.1.11",
+    "openai": "^6.42.0",
+    "postgres": "^3.4.9",
+    "rss-parser": "^3.13.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.2",
+    "drizzle-kit": "^0.31.10",
+    "eslint": "^10.4.1",
+    "railway": "^3.3.1",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.60.1"
+  }
+}
