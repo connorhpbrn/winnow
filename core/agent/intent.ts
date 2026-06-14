@@ -69,7 +69,7 @@ async function modelClassify(text: string): Promise<ClassifiedIntent> {
   const system =
     'Classify a message to a personal briefing agent into one intent and extract a topic label if present. Intents: track, untrack, ignore, more_like, less_like, edit_schedule, edit_topics, remember (the user is supplying durable context about themselves), feedback (product feedback for the team), follow_up (a question about the brief), smalltalk, unknown. Return JSON {"intent": string, "label": string optional}.';
   try {
-    const res = await callModel({ role: 'bulk', system, user: text, json: true, maxTokens: 120 });
+    const res = await callModel({ role: 'bulk', system, user: text, json: true, maxTokens: 100 });
     const parsed = IntentSchema.parse(JSON.parse(res.content));
     return { intent: parsed.intent, args: parsed.label ? { label: parsed.label.toLowerCase() } : {} };
   } catch {

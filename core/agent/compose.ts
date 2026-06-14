@@ -18,7 +18,7 @@ export async function composeBrief(input: ComposeInput): Promise<ComposeResult> 
     user,
     jsonSchema: { name: 'brief', schema: BriefSchema },
     temperature: 0.4,
-    maxTokens: 2200,
+    maxTokens: 1800,
   });
   const parsed = parseBrief(res.content);
   if (parsed.ok) return { ok: true, brief: enforceCandidateImages(parsed.brief, input), usage: res.usage };

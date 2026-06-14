@@ -68,7 +68,7 @@ ${negative.map((interest) => `${interest.weight} ${interest.label}`).join('\n') 
       user,
       jsonSchema: { name: 'coverage_plan', schema: CoveragePlanSchema },
       temperature: 0.1,
-      maxTokens: 1400,
+      maxTokens: 1300,
     });
     return CoveragePlanSchema.parse(JSON.parse(result.content));
   } catch {

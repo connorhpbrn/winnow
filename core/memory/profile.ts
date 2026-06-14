@@ -67,7 +67,7 @@ async function modelDerive(input: RawAnswers): Promise<DerivedProfile> {
     'Build a high-fidelity editorial profile from a user\'s onboarding answers and supplied context. Return JSON {"personaSummary": string, "interests": [{"label": string, "kind": string, "weight": number}]}. personaSummary: 4 to 7 dense sentences in third person. Preserve their role, active work, products, goals, sectors, tools, locations, constraints, priorities, taste, and explicit dislikes when present. Distinguish active projects from parked ideas. interests: extract concrete topics, entities, companies, people, products, technologies, locations, regulations, competitors, and recurring themes from ALL fields, not only the explicit track list. Use positive weight 1 to 3 based on importance and negative weight -1 to -3 for explicit ignores or dislikes. Do not infer enthusiasm from incidental mentions. kind is one of topic, entity, company, person, keyword. Keep labels short, specific, lowercase, and deduplicated. No em dashes.';
   const user = `ABOUT THEM:\n${input.bioRaw}\n\nWORKING ON:\n${input.workingOnRaw}\n\nTRACK CLOSELY:\n${input.trackRaw}\n\nMOSTLY IGNORE:\n${input.ignoreRaw}\n\nADDITIONAL CONTEXT AND FILES:\n${input.contextRaw ?? ''}`;
   try {
-    const res = await callModel({ role: 'reasoning', system, user, jsonSchema: { name: 'profile', schema: DerivedSchema }, maxTokens: 700 });
+    const res = await callModel({ role: 'reasoning', system, user, jsonSchema: { name: 'profile', schema: DerivedSchema }, maxTokens: 650 });
     return DerivedSchema.parse(JSON.parse(res.content));
   } catch (e) {
     log.warn('derive_profile_fallback', { error: (e as Error).message });

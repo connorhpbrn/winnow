@@ -12,7 +12,11 @@ import type { AccountId } from '../schema/domain';
 
 const PER_ITEM_CAP = 50_000; // chars per stored item
 const DIGEST_INPUT_CAP = 60_000; // preserve rich connected profiles such as Creed
-const DIGEST_OUT_TOKENS = 1200;
+const DIGEST_OUT_TOKENS = 1100;
+
+// Simple in-memory cache for context digests (expires after 6 hours)
+const DIGEST_CACHE = new Map<string, { digest: string; timestamp: number }>();
+const DIGEST_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 
 export async function addContext(
   accountId: AccountId,
@@ -38,6 +42,14 @@ export async function contextSummary(accountId: AccountId): Promise<{ count: num
  * been captured since the last digest. Cheap (bulk model). Empty string when there is nothing.
  */
 export async function getContextDigest(accountId: AccountId): Promise<string> {
+  // Check cache first
+  const cacheKey = accountId;
+  const cached = DIGEST_CACHE.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < DIGEST_CACHE_TTL_MS) {
+    log.debug('digest_cache_hit', { accountId });
+    return cached.digest;
+  }
+
   const prof = (await db.select({ digest: userProfiles.contextDigest, at: userProfiles.contextDigestAt }).from(userProfiles).where(eq(userProfiles.accountId, accountId)).limit(1))[0];
   const digestAt = prof?.at ?? null;
 
@@ -48,11 +60,22 @@ export async function getContextDigest(accountId: AccountId): Promise<string> {
     .where(digestAt ? and(eq(contextItems.accountId, accountId), gt(contextItems.createdAt, digestAt)) : eq(contextItems.accountId, accountId))
     .limit(1);
 
-  if (newer.length === 0) return prof?.digest ?? '';
+  if (newer.length === 0) {
+    const cached = DIGEST_CACHE.get(cacheKey);
+    if (cached) {
+      log.debug('digest_cache_refresh', { accountId });
+      cached.timestamp = Date.now();
+    }
+    return prof?.digest ?? '';
+  }
 
   const items = await db.select().from(contextItems).where(eq(contextItems.accountId, accountId)).orderBy(desc(contextItems.createdAt));
   if (items.length === 0) return '';
-  return regenerate(accountId, items);
+  const digest = await regenerate(accountId, items);
+  
+  // Store in cache
+  DIGEST_CACHE.set(cacheKey, { digest, timestamp: Date.now() });
+  return digest;
 }
 
 export async function refreshContextDigest(accountId: AccountId): Promise<string> {

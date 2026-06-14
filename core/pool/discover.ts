@@ -7,6 +7,10 @@ import { canonicalizeUrl } from './canonical';
 import { log } from '../../lib/log';
 import { buildCoveragePlan } from '../memory/coverage';
 
+// Simple in-memory cache for research results (expires after 4 hours)
+const RESEARCH_CACHE = new Map<string, { result: unknown; timestamp: number }>();
+const RESEARCH_CACHE_TTL_MS = 4 * 60 * 60 * 1000;
+
 const ResearchSourceSchema = z.object({
   title: z.string(),
   url: z.url(),
@@ -233,6 +237,24 @@ RESEARCH ASSIGNMENT:
 ${query}
 
 Return up to 10 genuinely consequential, non-duplicate events.`;
+  
+  // Check cache first
+  const cacheKey = `${query}|${quietSignal}`;
+  const cached = RESEARCH_CACHE.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < RESEARCH_CACHE_TTL_MS) {
+    log.debug('research_cache_hit', { query: query.substring(0, 100) });
+    const result = cached.result;
+    const parsed = ResearchResultSchema.parse(JSON.parse(stripFences(result as string))).stories;
+    const cited = new Set((cached.result as any).citations.map((citation: any) => comparableUrl(citation.url)));
+    return parsed
+      .map((story: any) => ({
+        ...story,
+        sources: story.sources.filter((source: any) => cited.has(comparableUrl(source.url))),
+      }))
+      .filter((story: any) => story.sources.length > 0);
+  }
+  
+  log.debug('research_cache_miss', { query: query.substring(0, 100) });
   const result = await callModel({
     role: 'research',
     system: SYSTEM,
@@ -246,6 +268,9 @@ Return up to 10 genuinely consequential, non-duplicate events.`;
       excludeDomains: ['pinterest.com', 'quora.com', 'fandom.com', 'instagram.com', 'facebook.com'],
     },
   });
+  
+  // Store in cache
+  RESEARCH_CACHE.set(cacheKey, { result: result.content, timestamp: Date.now() });
   const parsed = ResearchResultSchema.parse(JSON.parse(stripFences(result.content))).stories;
   const cited = new Set(result.citations.map((citation) => comparableUrl(citation.url)));
   return parsed

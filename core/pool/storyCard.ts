@@ -66,7 +66,7 @@ export async function summariseStory(storyId: StoryId): Promise<StoryCard> {
 
   let parsed: z.infer<typeof SummarySchema>;
   try {
-    const res = await callModel({ role: 'bulk', system, user, json: true, maxTokens: 400 });
+    const res = await callModel({ role: 'bulk', system, user, json: true, maxTokens: 380 });
     parsed = SummarySchema.parse(JSON.parse(res.content));
   } catch (e) {
     log.warn('summarise_fallback', { storyId, error: (e as Error).message });

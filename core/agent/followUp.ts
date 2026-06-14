@@ -103,7 +103,7 @@ async function handleMore(accountId: AccountId, ref: { n?: string; itemId?: stri
   const context = await getContextDigest(accountId);
   const system = `You are Winnow, a skeptical high-signal analyst. Expand on one brief item for this person in their preferred style (${profile?.writingStyle ?? 'balanced'}). Paraphrase only, no reproduced text, any quote under 15 words, no em dashes. Keep it tight.`;
   const user = `PERSON: ${profile?.personaSummary ?? ''}\nFULL CONTEXT: ${context}\n\nITEM: ${item.headline}\nWHAT CHANGED: ${item.what_changed}\nWHY IT MATTERS: ${item.why_it_matters}\nSIGNAL: ${item.signal_quality} (${item.signal_note})\n\nExpand with the most useful extra context and what to watch next.`;
-  const res = await callModel({ role: 'reasoning', system, user, maxTokens: 500 });
+  const res = await callModel({ role: 'reasoning', system, user, maxTokens: 400 });
   return { blocks: [block.text(res.content.trim()), block.link(item.sources[0]?.title ?? 'Source', item.sources[0]?.url ?? '')] };
 }
 
@@ -122,7 +122,7 @@ async function handleFollowUp(msg: InboundMessage): Promise<Reply> {
   const context = await getContextDigest(msg.accountId);
   const system = `You are Winnow, a skeptical high-signal analyst for this person. Answer their question using only the brief below and your general knowledge, paraphrased, no em dashes, in their style (${profile?.writingStyle ?? 'balanced'}). If the brief does not cover it, say so honestly.`;
   const user = `PERSON: ${profile?.personaSummary ?? ''}\nFULL CONTEXT: ${context}\n\nBRIEF: ${JSON.stringify(brief.items.map((i) => ({ headline: i.headline, what_changed: i.what_changed, why: i.why_it_matters })))}\n\nQUESTION: ${msg.text}`;
-  const res = await callModel({ role: 'reasoning', system, user, maxTokens: 500 });
+  const res = await callModel({ role: 'reasoning', system, user, maxTokens: 400 });
   return textReply(res.content.trim());
 }
 
@@ -146,7 +146,7 @@ export async function handleDeepDive(accountId: AccountId, itemId: string): Prom
   const profile = await getProfile(accountId);
   const system = `You are Winnow, a skeptical high-signal analyst for this person. Write a deeper but honest analysis of one item, paraphrased in your own words (never reproduce text, any quote under 15 words and attributed), no em dashes, in their style (${profile?.writingStyle ?? 'balanced'}). Be concrete about what it means for them and what to watch. Around 150 to 220 words.`;
   const user = `PERSON: ${profile?.personaSummary ?? ''}\n\nITEM: ${item.headline}\nWHAT CHANGED: ${item.what_changed}\nWHY IT MATTERS: ${item.why_it_matters}\nSOURCE TEXT (may be partial): ${fetched.slice(0, 3000) || '(could not fetch, use the summary)'}\n\nWrite the deeper analysis.`;
-  const res = await callModel({ role: 'reasoning', system, user, maxTokens: 700 });
+  const res = await callModel({ role: 'reasoning', system, user, maxTokens: 600 });
   return { blocks: [block.text(res.content.trim()), block.link(item.sources[0]?.title ?? 'Source', url)] };
 }
 
